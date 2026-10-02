@@ -1,0 +1,173 @@
+@import '~@fluentui/react/dist/sass/References.scss';
+@import '../../shared/favouritesTheme';
+
+.addFavourite {
+  padding: 16px 0;
+  @include webPartTypography;
+  color: $bodyText;
+  color: var(--bodyText, $bodyText);
+  background: transparent;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  min-height: 72px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 2px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  @include themeTileSurface;
+}
+
+.cardMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+  @include themeTileText;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardTitleLarge {
+  font-size: 20px;
+  line-height: 1.25;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: unset;
+}
+
+.cardInternalIcon {
+  flex-shrink: 0;
+  font-size: 16px;
+  @include themeTileText;
+}
+
+.cardDescription {
+  font-size: inherit;
+  line-height: 1.45;
+  @include themeTileMutedText;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid $white;
+  border-color: var(--tileText, $white);
+  @include themeTileIconButton;
+
+  &:hover:not(:disabled) {
+    border-color: $white;
+    border-color: var(--tileText, $white);
+  }
+}
+
+.actionButtonPrimary {
+  position: static;
+  border-color: $white;
+  border-color: var(--tileText, $white);
+  background: rgba(255, 255, 255, 0.12);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  &:hover:not(:disabled)::after {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible::after {
+    outline: 2px solid var(--tileText, #fff);
+    outline-offset: -4px;
+  }
+
+  &:disabled::after {
+    cursor: wait;
+  }
+}
+
+.helpTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid $white;
+  border-color: var(--tileText, $white);
+  background: transparent;
+  @include themeTileText;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: default;
+  user-select: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.emptyConfig {
+  margin: 0;
+  font-size: 14px;
+  color: $neutralSecondary;
+  color: var(--neutralSecondary, $neutralSecondary);
+}
+
+.feedback {
+  margin-top: 12px;
+  width: 100%;
+}
+
+// Keep information icons accessible above the expanded Add button.
+.helpTrigger,
+.cardInternalIcon {
+  position: relative;
+  z-index: 2;
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "myfavourites-client-side-solution",
+    "id": "a8b9e537-e170-4cc2-9fcc-5e38707994e5",
+    "version": "1.0.4.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.22.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "myfavourites description"
+      },
+      "longDescription": {
+        "default": "myfavourites description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "myfavourites Feature",
+        "description": "The feature that activates elements of the myfavourites solution.",
+        "id": "f1cc17ef-ddc5-46b6-a9bf-b72fdd1ac26c",
+        "version": "1.0.4.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/myfavourites.sppkg"
+  }
+}

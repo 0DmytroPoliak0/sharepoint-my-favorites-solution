@@ -1,0 +1,73 @@
+// SharePoint theme tokens (resolved at runtime when supportsThemeVariants is enabled).
+$themePrimary: '[theme:themePrimary, default: #003366]';
+$themeDark: '[theme:themeDark, default: #002244]';
+$themeDarker: '[theme:themeDarker, default: #001a33]';
+$themeLight: '[theme:themeLight, default: #336699]';
+$bodyText: '[theme:bodyText, default: #323130]';
+$bodyBackground: '[theme:bodyBackground, default: #ffffff]';
+$link: '[theme:link, default: #0078d4]';
+$white: '[theme:white, default: #ffffff]';
+$neutralSecondary: '[theme:neutralSecondary, default: #605e5c]';
+$neutralPrimary: '[theme:neutralPrimary, default: #323130]';
+$neutralQuaternary: '[theme:neutralQuaternary, default: #edebe9]';
+
+@mixin webPartTypography {
+  font-family: var(--wpFontFamily, 'BC Sans'), 'BC Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+@mixin themeTileSurface {
+  background: $themePrimary;
+  background: var(--themePrimary, $themePrimary);
+  border: 1px solid $themeDark;
+  border-color: var(--themeDark, $themeDark);
+  color: $white;
+  color: var(--tileText, $white);
+
+  &:hover {
+    background: $themeDark;
+    background: var(--themeDark, $themeDark);
+    border-color: $themeDarker;
+    border-color: var(--themeDarker, $themeDarker);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    transform: translateY(-2px);
+  }
+}
+
+@mixin themeTileText {
+  color: $white;
+  color: var(--tileText, $white);
+}
+
+@mixin themeTileMutedText {
+  @include themeTileText;
+  opacity: 0.9;
+}
+
+@mixin themeTileIconButton {
+  color: $white;
+  color: var(--tileText, $white);
+  background: transparent;
+
+  :global(.ms-Button-icon),
+  :global(.ms-Icon) {
+    color: $white !important;
+    color: var(--tileText, $white) !important;
+  }
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+
+    :global(.ms-Button-icon),
+    :global(.ms-Icon) {
+      color: $white !important;
+      color: var(--tileText, $white) !important;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
