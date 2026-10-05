@@ -14,15 +14,23 @@
 .card {
   position: relative;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 12px;
-  min-height: 72px;
+  min-height: 60px;
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 2px;
+  padding: 12px;
+  border: 1px solid var(--themeDark, #006b9d);
+  border-radius: 4px;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-  @include themeTileSurface;
+  background: transparent;
+  color: #242424;
+  color: var(--bodyText, #242424);
+  font-family: var(
+    --fontFamilyCustomFont1100,
+    var(--fontFamilyBase, 'BC Sans', 'Segoe UI', sans-serif)
+  );
+  font-size: var(--fontSizeBase300, 14px);
+  line-height: var(--lineHeightBase300, 20px);
 }
 
 .cardMain {
@@ -41,37 +49,32 @@
   min-width: 0;
 }
 
-.cardTitle {
-  font-size: inherit;
-  font-weight: 600;
-  line-height: 1.3;
-  @include themeTileText;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+.cardTitle,
 .cardTitleLarge {
-  font-size: 20px;
-  line-height: 1.25;
+  min-width: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(
+    --fontWeightCustomFont1100,
+    var(--fontWeightSemibold, 600)
+  );
+  line-height: inherit;
+  font-style: var(--fontStyleRegular, normal);
+  color: inherit;
   white-space: normal;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: unset;
+  overflow-wrap: anywhere;
 }
 
 .cardInternalIcon {
   flex-shrink: 0;
   font-size: 16px;
-  @include themeTileText;
+  color: inherit;
 }
 
 .cardDescription {
   font-size: inherit;
   line-height: 1.45;
-  @include themeTileMutedText;
+  color: inherit;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -89,41 +92,50 @@
 }
 
 .actionButton {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid $white;
-  border-color: var(--tileText, $white);
-  @include themeTileIconButton;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
 
-  &:hover:not(:disabled) {
-    border-color: $white;
-    border-color: var(--tileText, $white);
+  :global(.ms-Button-icon) {
+    font-size: 20px;
+    color: inherit;
+  }
+
+  &:hover,
+  &:active {
+    background: transparent;
+    color: inherit;
   }
 }
 
 .actionButtonPrimary {
   position: static;
-  border-color: $white;
-  border-color: var(--tileText, $white);
-  background: rgba(255, 255, 255, 0.12);
 
   &::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
-    border-radius: 2px;
+    border-radius: 4px;
     cursor: pointer;
   }
 
   &:hover:not(:disabled)::after {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 107, 157, 0.06);
   }
 
   &:focus-visible::after {
-    outline: 2px solid var(--tileText, #fff);
+    outline: 2px solid currentColor;
     outline-offset: -4px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
   }
 
   &:disabled::after {
@@ -138,10 +150,9 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid $white;
-  border-color: var(--tileText, $white);
+  border: 1px solid currentColor;
   background: transparent;
-  @include themeTileText;
+  color: inherit;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;

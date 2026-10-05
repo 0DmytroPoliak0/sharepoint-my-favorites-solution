@@ -106,7 +106,7 @@ const FavouritesGrid: React.FC<IFavouritesGridProps> = ({
   );
 
   if (items.length === 0) {
-    return <p className={styles.emptyState}>No favourites yet. Use Manage my favourites to add links.</p>;
+    return <p className={styles.emptyState}>No homepage quick links yet. Use Manage my homepage quick links to add links.</p>;
   }
 
   const gridStyle: React.CSSProperties = {

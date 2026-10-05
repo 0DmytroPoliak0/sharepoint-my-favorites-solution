@@ -7,16 +7,45 @@ $siteUrl = "https://fhatesttenant.sharepoint.com/sites/pulse-jen-fh"
 $ClientID = "4662122e-5c0b-4505-ba36-48fdfb70f1b4"
 # PROD 8d03328a-0763-4912-a3c8-e0e110015be0
 
-Connect-PnPOnline –Url $siteUrl -ClientId $ClientID -Tenant "fhatesttenant.onmicrosoft.com" -interactive 
+Connect-PnPOnline -Url $siteUrl -ClientId $ClientID -Tenant "fhatesttenant.onmicrosoft.com" -interactive
 
 Import-Module PnP.PowerShell
 
-#------------------------------------------------------------
-# Create Document Library: MyFavourites
-#------------------------------------------------------------
-$libraryTitle = "MyFavourites"
+# Check storage names and paths before creating anything.
+$existingLists = @(Get-PnPList -Includes RootFolder -ErrorAction Stop)
+$webPath = ([uri]$siteUrl).AbsolutePath.TrimEnd('/')
+$legacyLists = @($existingLists | Where-Object {
+    $_.Title -in @('MyFavourites', 'Pulse Favourites Catalog') -or
+    $_.RootFolder.ServerRelativeUrl -in @(
+        "$webPath/MyFavourites", "$webPath/Lists/PulseFavouritesCatalog"
+    )
+})
+if ($legacyLists.Count) {
+    throw 'Old favourites storage exists on this site. Rename it in place before running setup; this script will not create duplicate storage.'
+}
+$storageTargets = @(
+    @{ Title = 'Pulse homepage quick links'; Path = 'PulseHomepageQuickLinks' },
+    @{ Title = 'Pulse homepage quick links catalogue'; Path = 'Lists/PulseHomepageQuickLinksCatalogue' }
+)
+foreach ($storageTarget in $storageTargets) {
+    $expectedUrl = "$webPath/$($storageTarget.Path)"
+    $namedList = @($existingLists | Where-Object { $_.Title -eq $storageTarget.Title })
+    if ($namedList.Count -and $namedList[0].RootFolder.ServerRelativeUrl -ne $expectedUrl) {
+        throw "The storage title '$($storageTarget.Title)' exists at an unexpected URL. Check it before running setup."
+    }
+    if (@($existingLists | Where-Object {
+        $_.RootFolder.ServerRelativeUrl -eq $expectedUrl -and $_.Title -ne $storageTarget.Title
+    }).Count) {
+        throw "The required storage URL is already used by another list: $expectedUrl"
+    }
+}
 
-$library = Get-PnPList -Identity $libraryTitle -ErrorAction SilentlyContinue
+#------------------------------------------------------------
+# Create Document Library: Pulse homepage quick links
+#------------------------------------------------------------
+$libraryTitle = "Pulse homepage quick links"
+
+$library = $existingLists | Where-Object { $_.Title -eq $libraryTitle }
 
 if (-not $library)
 {
@@ -25,6 +54,7 @@ if (-not $library)
     New-PnpList `
         -Title $libraryTitle `
         -Template DocumentLibrary `
+        -Url "PulseHomepageQuickLinks" `
         -OnQuickLaunch:$false
 
     $library = Get-PnPList -Identity $libraryTitle
@@ -40,11 +70,11 @@ else
 }
 
 #------------------------------------------------------------
-# Create Custom List: Pulse Favourites Catalog
+# Create Custom List: Pulse homepage quick links catalogue
 #------------------------------------------------------------
-$listTitle = "Pulse Favourites Catalog"
+$listTitle = "Pulse homepage quick links catalogue"
 
-$list = Get-PnPList -Identity $listTitle -ErrorAction SilentlyContinue
+$list = $existingLists | Where-Object { $_.Title -eq $listTitle }
 
 if (-not $list)
 {
@@ -53,6 +83,7 @@ if (-not $list)
     New-PnpList `
         -Title $listTitle `
         -Template GenericList `
+        -Url "Lists/PulseHomepageQuickLinksCatalogue" `
         -OnQuickLaunch:$false
 
     $list = Get-PnPList -Identity $listTitle
@@ -137,7 +168,7 @@ if (-not $list)
         DefaultValue = "0"
     }
 
-    # Include this link in a new user's initial favourites
+    # Include this link in a new user's initial homepage quick links
     Add-PnPField -List $listTitle -DisplayName "isStarter" -InternalName "isStarter" -Type Boolean
 
     Set-PnPField -List $listTitle -Identity "isStarter" -Values @{

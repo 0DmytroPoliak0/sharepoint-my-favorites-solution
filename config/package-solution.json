@@ -2,8 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
     "name": "myfavourites-client-side-solution",
+    "title": "FraserHealth Pulse Homepage Quick Links",
     "id": "a8b9e537-e170-4cc2-9fcc-5e38707994e5",
-    "version": "1.0.4.0",
+    "version": "1.0.7.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -16,10 +17,10 @@
     },
     "metadata": {
       "shortDescription": {
-        "default": "myfavourites description"
+        "default": "Personal homepage quick links for FraserHealth Pulse."
       },
       "longDescription": {
-        "default": "myfavourites description"
+        "default": "Personal homepage quick links for FraserHealth Pulse."
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -30,7 +31,7 @@
         "title": "myfavourites Feature",
         "description": "The feature that activates elements of the myfavourites solution.",
         "id": "f1cc17ef-ddc5-46b6-a9bf-b72fdd1ac26c",
-        "version": "1.0.4.0"
+        "version": "1.0.7.0"
       }
     ]
   },

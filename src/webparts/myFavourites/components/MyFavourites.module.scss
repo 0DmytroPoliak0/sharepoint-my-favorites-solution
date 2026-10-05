@@ -15,7 +15,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   gap: 24px;
 }
 
@@ -150,10 +150,13 @@ $tile-size: 92px;
 
 .tile {
   position: relative;
-  border-radius: 2px;
+  border-radius: 4px;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease, background 0.2s ease;
+
   @include themeTileSurface;
+  border: none;
 }
 
 .tileView {
@@ -191,10 +194,20 @@ $tile-size: 92px;
 
 .tileTitle {
   width: 100%;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-family: var(
+    --fontFamilyCustomFont1100,
+    var(--fontFamilyBase, 'Segoe UI', sans-serif)
+  );
+  font-size: var(--fontSizeBase300, 14px);
+  font-weight: var(
+    --fontWeightCustomFont1100,
+    var(--fontWeightSemibold, 600)
+  );
+  line-height: var(--lineHeightBase300, 20px);
+  font-style: var(--fontStyleRegular, normal);
+
   @include themeTileText;
+
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -617,5 +630,43 @@ $tile-size: 92px;
   &:hover,
   &:focus-within {
     z-index: 3;
+  }
+}
+
+// Compact square homepage tiles with up to four title lines.
+.tileGridView .tile {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 0;
+}
+
+.tileView .tileLink {
+  padding: 0 6px;
+}
+
+.tileView .tileTitle {
+  font-family: var(
+    --fontFamilyCustomFont500,
+    var(--fontFamilyBase, 'Segoe UI', sans-serif)
+  );
+  font-weight: var(--fontWeightRegular, 400);
+  line-height: calc(var(--lineHeightBase300, 20px) * 0.9);
+  -webkit-line-clamp: 4;
+  flex-shrink: 0;
+}
+
+// Homepage Manage control: use page typography and normal text colour.
+.header .headerActionRow {
+  font-family: var(
+    --fontFamilyCustomFont500,
+    var(--fontFamilyBase, 'Segoe UI', sans-serif)
+  );
+  font-size: var(--fontSizeBase300, 14px);
+  line-height: var(--lineHeightBase300, 20px);
+  color: var(--bodyText, #323130);
+
+  &:hover:not(:disabled) {
+    color: var(--bodyText, #323130);
   }
 }

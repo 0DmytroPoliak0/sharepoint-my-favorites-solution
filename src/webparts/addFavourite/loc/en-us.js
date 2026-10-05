@@ -11,6 +11,6 @@ define([], function() {
     "InternalOffText": "Off",
     "InternalOnText": "On",
     "HelpInfoLabel": "Help info",
-    "HelpInfoDescription": "Shown on the help (?) control when Description is filled. Not saved to the user's favourites file."
+    "HelpInfoDescription": "Shown on the help (?) control when Description is filled. Not saved with the user's homepage quick links."
   }
 });

@@ -16,10 +16,10 @@
   "supportsThemeVariants": true,
 
   "preconfiguredEntries": [{
-    "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
     "group": { "default": "Advanced" },
-    "title": { "default": "MyFavourites" },
-    "description": { "default": "MyFavourites description" },
+    "title": { "default": "Pulse homepage quick links" },
+    "description": { "default": "Display and manage your personal homepage quick links." },
     "officeFabricIconFontName": "Page",
     "properties": {
       "maxRows": 3,

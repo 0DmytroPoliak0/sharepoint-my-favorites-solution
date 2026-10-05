@@ -11,8 +11,8 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
     "group": { "default": "Advanced" },
-    "title": { "default": "Add-a-Favourite" },
-    "description": { "default": "Add a configured link to the signed-in user's My Favourites list." },
+    "title": { "default": "Pulse add homepage quick link" },
+    "description": { "default": "Add this page or a configured link to your homepage quick links." },
     "officeFabricIconFontName": "AddFavorite",
     "properties": {
       "linkTitle": "",

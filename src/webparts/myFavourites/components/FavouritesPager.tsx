@@ -14,7 +14,7 @@ const FavouritesPager: React.FC<IFavouritesPagerProps> = ({ pageIndex, pageCount
   }
 
   return (
-    <nav className={styles.pager} aria-label="Favourites pages">
+    <nav className={styles.pager} aria-label="Homepage quick links pages">
       <IconButton
         className={styles.pagerChevron}
         iconProps={{ iconName: 'ChevronLeft' }}

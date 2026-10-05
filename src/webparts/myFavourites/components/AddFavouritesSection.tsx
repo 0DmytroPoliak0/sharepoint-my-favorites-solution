@@ -44,9 +44,9 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
   onClearForm
 }) => {
   return (
-    <section className={styles.manageAddSection} aria-label="Add a My Favourite">
+    <section className={styles.manageAddSection} aria-label="Add a quick link to my homepage">
       <Text variant="mediumPlus" block className={styles.manageAddHeading}>
-        Add a My Favourite
+        Add a quick link to my homepage
       </Text>
       <Pivot className={styles.addFavouritesPivot}>
         <PivotItem headerText="Add from catalogue" itemKey="catalog">
@@ -55,7 +55,7 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
             {catalogLoading ? <Spinner size={SpinnerSize.small} label="Loading catalogue..." /> : null}
             {catalogError ? <MessageBar messageBarType={MessageBarType.warning}>{catalogError}</MessageBar> : null}
             {!catalogLoading && !catalogError && availableCatalog.length === 0 ? (
-              <p className={styles.catalogEmpty}>All catalogue items are already in your favourites.</p>
+              <p className={styles.catalogEmpty}>All catalogue items are already in your homepage quick links.</p>
             ) : (
               <div className={styles.catalogGrid} role="list" aria-label={PULSE_FAVOURITES_CATALOGUE_LABEL}>
                 {availableCatalog.map((row) => {
@@ -68,7 +68,7 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
                         className={styles.catalogCardMain}
                         disabled={busy}
                         onClick={() => onAddFromCatalog(row)}
-                        aria-label={`Add ${row.title} to favourites`}
+                        aria-label={`Add ${row.title} to my homepage quick links`}
                       >
                         <span className={styles.catalogCardTitle}>{row.title}</span>
                         {description ? <span className={styles.catalogCardDesc}>{description}</span> : null}

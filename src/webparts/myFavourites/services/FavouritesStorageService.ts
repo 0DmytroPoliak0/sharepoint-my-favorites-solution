@@ -147,19 +147,19 @@ export class FavouritesStorageService {
         }
       });
     } catch (err: unknown) {
-      throw new Error(`Failed to resolve MyFavourites library: ${spErrorMessage(err)}`);
+      throw new Error(`Failed to resolve Pulse homepage quick links library: ${spErrorMessage(err)}`);
     }
 
     if (!response.ok) {
       throw new Error(
-        `MyFavourites library was not found (${response.status}): ${await readResponseError(response)}`
+        `Pulse homepage quick links library was not found (${response.status}): ${await readResponseError(response)}`
       );
     }
 
     const data = (await response.json()) as IRootFolderResponse;
     const serverRelativeUrl: string | undefined = data.ServerRelativeUrl;
     if (!serverRelativeUrl) {
-      throw new Error('Could not resolve the server-relative URL for the MyFavourites library.');
+      throw new Error('Could not resolve the server-relative URL for the Pulse homepage quick links library.');
     }
 
     this._folderServerRelativeUrl = serverRelativeUrl;

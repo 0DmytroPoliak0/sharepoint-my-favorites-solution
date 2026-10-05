@@ -14,6 +14,7 @@ import ManageFavouritesPanel from './ManageFavouritesPanel';
 
 const MyFavourites: React.FC<IMyFavouritesProps> = (props) => {
   const { storageService, catalogService, maxRows, manageAboutUrl } = props;
+  const webPartRef = React.useRef<HTMLElement>(null);
 
   const [storedItems, setStoredItems] = React.useState<IFavouriteItem[]>([]);
   const [catalog, setCatalog] = React.useState<ICatalogItem[]>([]);
@@ -83,7 +84,7 @@ const MyFavourites: React.FC<IMyFavouritesProps> = (props) => {
   );
 
   return (
-    <section className={styles.myFavourites}>
+    <section ref={webPartRef} className={styles.myFavourites}>
       <header className={styles.header}>
         <div className={styles.headerToolbar}>
           <button
@@ -105,7 +106,7 @@ const MyFavourites: React.FC<IMyFavouritesProps> = (props) => {
       {error ? <MessageBar messageBarType={MessageBarType.error}>{error}</MessageBar> : null}
 
       {loading ? (
-        <Spinner size={SpinnerSize.medium} label="Loading your favourites..." />
+        <Spinner size={SpinnerSize.medium} label="Loading your homepage quick links..." />
       ) : (
         <Stack tokens={{ childrenGap: 12 }}>
           <FavouritesGrid items={viewItems} mode="view" maxRows={maxRows} />
@@ -122,6 +123,7 @@ const MyFavourites: React.FC<IMyFavouritesProps> = (props) => {
         manageAboutUrl={manageAboutUrl}
         onDismiss={() => setManageOpen(false)}
         onSave={handleSave}
+        themeSourceElement={webPartRef.current ?? undefined}
       />
     </section>
   );

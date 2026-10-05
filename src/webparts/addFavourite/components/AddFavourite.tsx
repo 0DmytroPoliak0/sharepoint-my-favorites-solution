@@ -90,7 +90,7 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
       await storageService.saveFavourites(next);
       setAlreadyAdded(true);
       setNoticeType(MessageBarType.success);
-      setNotice('Added to your favourites.');
+      setNotice('Added to your homepage quick links.');
     } catch (err: unknown) {
       const msg: string = err instanceof Error ? err.message : String(err);
       setNoticeType(MessageBarType.error);
@@ -109,11 +109,21 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
   }
 
   const titleClassName: string = hasDescription ? styles.cardTitle : `${styles.cardTitle} ${styles.cardTitleLarge}`;
-  const cardHeading: string = link.hasConfiguredTitle ? title : 'Add to My Favourites';
+  const cardHeading: string = 'Add to my homepage quick links';
 
   return (
-    <section className={styles.addFavourite} aria-label="Add a favourite">
+    <section className={styles.addFavourite} aria-label="Add a quick link to my homepage">
       <article className={styles.card}>
+        <IconButton
+          className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+          iconProps={{ iconName: 'CircleAddition' }}
+          title={alreadyAdded ? 'Already in your homepage quick links' : cardHeading}
+          ariaLabel={`${cardHeading}: ${title}`}
+          disabled={busy}
+          onClick={() => {
+            handleAdd().catch(() => undefined);
+          }}
+        />
         <div className={styles.cardMain}>
           <div className={styles.cardTitleRow}>
             <span className={titleClassName}>{cardHeading}</span>
@@ -131,16 +141,6 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
         </div>
 
         <div className={styles.cardActions}>
-          <IconButton
-            className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
-            iconProps={{ iconName: 'Add' }}
-            title={alreadyAdded ? 'Already in your favourites' : 'Add to My Favourites'}
-            ariaLabel={alreadyAdded ? 'Already in your favourites' : `Add to My Favourites (${title})`}
-            disabled={busy}
-            onClick={() => {
-              handleAdd().catch(() => undefined);
-            }}
-          />
           {showHelp ? (
             <TooltipHost
               content={helpTooltip}

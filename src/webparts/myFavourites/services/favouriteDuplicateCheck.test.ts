@@ -26,10 +26,10 @@ describe('favouriteDuplicateCheck', () => {
   });
 
   it('returns duplicate message', () => {
-    expect(duplicateTitleError(' VPN Portal ')).toBe('A favourite named "VPN Portal" is already in your list.');
+    expect(duplicateTitleError(' VPN Portal ')).toBe('A quick link named "VPN Portal" is already in your homepage quick links.');
   });
 
   it('returns already-added message', () => {
-    expect(favouriteAlreadyAddedMessage(' VPN Portal ')).toBe('"VPN Portal" is already in your favourites.');
+    expect(favouriteAlreadyAddedMessage(' VPN Portal ')).toBe('"VPN Portal" is already in your homepage quick links.');
   });
 });

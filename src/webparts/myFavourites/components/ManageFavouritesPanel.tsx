@@ -41,10 +41,12 @@ export interface IManageFavouritesPanelProps {
   manageAboutUrl: string;
   onDismiss: () => void;
   onSave: (items: IFavouriteItem[]) => Promise<void>;
+  themeSourceElement?: HTMLElement;
 }
 
 const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   isOpen,
+  themeSourceElement,
   items,
   catalog: catalogFromParent,
   catalogService,
@@ -286,16 +288,35 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
     }
   }, [onSave]);
 
+  const panelThemeStyle: React.CSSProperties & Record<string, string> = {};
+
+  if (isOpen && themeSourceElement) {
+    const sourceStyle = window.getComputedStyle(themeSourceElement);
+
+    for (let index = 0; index < sourceStyle.length; index++) {
+      const propertyName = sourceStyle.item(index);
+
+      if (propertyName.startsWith('--')) {
+        const value = sourceStyle.getPropertyValue(propertyName).trim();
+
+        if (value) {
+          panelThemeStyle[propertyName] = value;
+        }
+      }
+    }
+  }
+
   const deleteDialogSubText: string = pendingDelete
-    ? `Are you sure you want to remove "${pendingDelete.title}" from your favourites?`
+    ? `Are you sure you want to remove "${pendingDelete.title}" from your homepage quick links?`
     : '';
 
   return (
     <Panel
       isOpen={isOpen}
       onDismiss={onDismiss}
+      layerProps={{ fabricProps: { style: panelThemeStyle } }}
       type={PanelType.large}
-      headerText="Manage my favourites"
+      headerText="Manage my homepage quick links"
       closeButtonAriaLabel="Close"
       onRenderFooterContent={() => (
         <Stack horizontal tokens={{ childrenGap: 8 }}>
@@ -321,7 +342,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <span className={styles.headerActionText}>How to use My Favourites</span>
+            <span className={styles.headerActionText}>How to use homepage quick links</span>
             <Icon iconName="Info" className={styles.headerActionIcon} aria-hidden="true" />
           </a>
         ) : null}
@@ -340,9 +361,9 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
         </section>
 
         {isEditing ? (
-          <section className={styles.editSection} aria-label="Edit favourite">
+          <section className={styles.editSection} aria-label="Edit quick link">
             <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-              <Text variant="mediumPlus">Edit favourite</Text>
+              <Text variant="mediumPlus">Edit quick link</Text>
               <DefaultButton text="Cancel edit" onClick={handleCancelEdit} disabled={busy} />
             </Stack>
             {editFormError ? <MessageBar messageBarType={MessageBarType.error}>{editFormError}</MessageBar> : null}
@@ -378,7 +399,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
         onDismiss={handleDialogDismiss}
         dialogContentProps={{
           type: DialogType.normal,
-          title: 'Remove favourite',
+          title: 'Remove quick link',
           subText: deleteDialogSubText
         }}
         modalProps={{ isBlocking: true }}

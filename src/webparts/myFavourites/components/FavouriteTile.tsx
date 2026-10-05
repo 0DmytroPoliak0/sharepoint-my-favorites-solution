@@ -73,7 +73,7 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
               <IconButton
                 className={styles.tileEdit}
                 iconProps={{ iconName: 'Edit' }}
-                title="Edit favourite"
+                title="Edit quick link"
                 ariaLabel={`Edit ${item.title}`}
                 onClick={() => onEdit!(item.id)}
               />
@@ -82,7 +82,7 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
               <IconButton
                 className={styles.tileDelete}
                 iconProps={{ iconName: 'Delete' }}
-                title="Remove favourite"
+                title="Remove quick link"
                 ariaLabel={`Remove ${item.title}`}
                 onClick={(ev) => {
                   ev.preventDefault();
