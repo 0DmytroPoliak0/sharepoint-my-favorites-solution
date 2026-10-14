@@ -25,7 +25,10 @@ import {
   normalizeFavouriteItem,
   validateFavouriteForm
 } from '../services/favouritesFileModel';
-import { duplicateTitleError, findFavouriteWithTitle } from '../services/favouriteDuplicateCheck';
+import {
+  favouriteAlreadyAddedMessage,
+  findFavouriteDuplicate
+} from '../services/favouriteDuplicateCheck';
 import AddFavouritesSection from './AddFavouritesSection';
 import FavouriteItemForm from './FavouriteItemForm';
 import FavouritesGrid from './FavouritesGrid';
@@ -44,6 +47,8 @@ export interface IManageFavouritesPanelProps {
   themeSourceElement?: HTMLElement;
 }
 
+// states declared in the component are used to manage the draft list of favourites, the catalog, form values for adding and editing favourites, and various error states. The component also manages the state of which favourite is currently being edited or deleted.
+
 const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   isOpen,
   themeSourceElement,
@@ -61,6 +66,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   const [catalogLoading, setCatalogLoading] = React.useState<boolean>(false);
   const [catalogError, setCatalogError] = React.useState<string | undefined>(undefined);
   const [addForm, setAddForm] = React.useState<IFavouriteFormValues>(emptyFavouriteFormValues());
+  const [addTab, setAddTab] = React.useState<'catalog' | 'manual'>('catalog');
   const [editForm, setEditForm] = React.useState<IFavouriteFormValues>(emptyFavouriteFormValues());
   const [editingId, setEditingId] = React.useState<string | undefined>(undefined);
   const [addFormError, setAddFormError] = React.useState<string | undefined>(undefined);
@@ -74,6 +80,47 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
 
   const isEditing: boolean = editingId !== undefined;
 
+  const hasAddFormInput: boolean =
+    addForm.title.length > 0 ||
+    addForm.url.length > 0 ||
+    addForm.description.length > 0;
+
+  const hasUnfinishedForm: boolean = isEditing || addTab === 'manual' || hasAddFormInput;
+
+  const panelActionsDisabled: boolean =
+    busy || hasUnfinishedForm || pendingDelete !== undefined;
+
+  const handlePanelDismiss = React.useCallback(
+    (ev?: React.SyntheticEvent<HTMLElement> | KeyboardEvent): void => {
+      if (panelActionsDisabled) {
+        ev?.preventDefault();
+        return;
+      }
+
+      onDismiss();
+    },
+    [onDismiss, panelActionsDisabled]
+  );
+
+  const handleAddTabChange = React.useCallback(
+    (tab: 'catalog' | 'manual'): void => {
+      if (busy) {
+        return;
+      }
+
+      if (hasAddFormInput && tab !== addTab) {
+        setAddFormError(
+          'Use Add or Cancel entry before switching tabs.'
+        );
+        return;
+      }
+
+      setAddFormError(undefined);
+      setAddTab(tab);
+    },
+    [busy, hasAddFormInput, addTab]
+  );
+
   React.useEffect(() => {
     draftRef.current = draft;
   }, [draft]);
@@ -86,6 +133,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
     draftRef.current = initial;
     setDraft(initial);
     setAddForm(emptyFavouriteFormValues());
+    setAddTab('catalog');
     setEditForm(emptyFavouriteFormValues());
     setEditingId(undefined);
     setAddFormError(undefined);
@@ -210,8 +258,11 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
 
   const handleAddFromCatalog = React.useCallback(
     (catalogItem: ICatalogItem) => {
-      if (findFavouriteWithTitle(draft, catalogItem.title)) {
-        setAddFormError(duplicateTitleError(catalogItem.title));
+      const duplicate: IFavouriteItem | undefined =
+        findFavouriteDuplicate(draft, catalogItem.title, catalogItem.url);
+
+      if (duplicate) {
+        setAddFormError(favouriteAlreadyAddedMessage(duplicate.title));
         return;
       }
 
@@ -229,8 +280,11 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
       return;
     }
 
-    if (findFavouriteWithTitle(draft, addForm.title)) {
-      setAddFormError(duplicateTitleError(addForm.title));
+    const duplicate: IFavouriteItem | undefined =
+      findFavouriteDuplicate(draft, addForm.title, addForm.url);
+
+    if (duplicate) {
+      setAddFormError(favouriteAlreadyAddedMessage(duplicate.title));
       return;
     }
 
@@ -238,6 +292,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
     appendToDraft(favourite);
     setAddForm(emptyFavouriteFormValues());
     setAddFormError(undefined);
+    setAddTab('catalog');
   }, [addForm, appendToDraft, draft]);
 
   const handleUpdateEdit = React.useCallback(() => {
@@ -250,8 +305,16 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
       return;
     }
 
-    if (findFavouriteWithTitle(draft, editForm.title, editingId)) {
-      setEditFormError(duplicateTitleError(editForm.title));
+    const duplicate: IFavouriteItem | undefined =
+      findFavouriteDuplicate(
+        draft,
+        editForm.title,
+        editForm.url,
+        editingId
+      );
+
+    if (duplicate) {
+      setEditFormError(favouriteAlreadyAddedMessage(duplicate.title));
       return;
     }
 
@@ -267,6 +330,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   const handleClearAddForm = React.useCallback(() => {
     setAddForm(emptyFavouriteFormValues());
     setAddFormError(undefined);
+    setAddTab('catalog');
   }, []);
 
   const handleReorder = React.useCallback((sourceId: string, targetId: string) => {
@@ -278,15 +342,24 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   }, []);
 
   const handleSave = React.useCallback(async () => {
+    if (panelActionsDisabled) {
+      return;
+    }
+
     setSaveError(undefined);
+
     try {
-      const toSave: IFavouriteItem[] = draftRef.current.map((item) => normalizeFavouriteItem(item));
+      const toSave: IFavouriteItem[] =
+        draftRef.current.map((item) => normalizeFavouriteItem(item));
+
       await onSave(toSave);
     } catch (err: unknown) {
-      const msg: string = err instanceof Error ? err.message : String(err);
+      const msg: string =
+        err instanceof Error ? err.message : String(err);
+
       setSaveError(msg);
     }
-  }, [onSave]);
+  }, [onSave, panelActionsDisabled]);
 
   const panelThemeStyle: React.CSSProperties & Record<string, string> = {};
 
@@ -313,7 +386,7 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
   return (
     <Panel
       isOpen={isOpen}
-      onDismiss={onDismiss}
+      onDismiss={handlePanelDismiss}
       layerProps={{ fabricProps: { style: panelThemeStyle } }}
       type={PanelType.large}
       headerText="Manage my homepage quick links"
@@ -325,9 +398,13 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
             onClick={() => {
               handleSave().catch(() => undefined);
             }}
-            disabled={busy}
+            disabled={panelActionsDisabled}
           />
-          <DefaultButton text="Cancel" onClick={onDismiss} disabled={busy} />
+          <DefaultButton
+            text="Cancel"
+            onClick={() => handlePanelDismiss()}
+            disabled={panelActionsDisabled}
+          />
         </Stack>
       )}
       isFooterAtBottom={true}
@@ -353,27 +430,52 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
             mode="manage"
             maxRows={maxRows}
             reorderable={true}
-            onReorder={handleReorder}
-            onDelete={handleRequestDelete}
-            onEdit={handleStartEdit}
+            onReorder={panelActionsDisabled ? undefined : handleReorder}
+            onDelete={panelActionsDisabled ? undefined : handleRequestDelete}
+            onEdit={panelActionsDisabled ? undefined : handleStartEdit}
             selectedId={editingId}
           />
         </section>
 
         {isEditing ? (
-          <section className={styles.editSection} aria-label="Edit quick link">
-            <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-              <Text variant="mediumPlus">Edit quick link</Text>
-              <DefaultButton text="Cancel edit" onClick={handleCancelEdit} disabled={busy} />
-            </Stack>
-            {editFormError ? <MessageBar messageBarType={MessageBarType.error}>{editFormError}</MessageBar> : null}
-            <FavouriteItemForm values={editForm} onChange={setEditForm} disabled={busy} />
-            <PrimaryButton
-              className={styles.manualFormActions}
-              text="Update"
-              onClick={handleUpdateEdit}
+          <section
+            className={styles.editSection}
+            aria-label="Edit quick link"
+          >
+            <Text variant="mediumPlus" block>
+              Edit quick link
+            </Text>
+
+            {editFormError ? (
+              <MessageBar messageBarType={MessageBarType.error}>
+                {editFormError}
+              </MessageBar>
+            ) : null}
+
+            <FavouriteItemForm
+              values={editForm}
+              onChange={setEditForm}
               disabled={busy}
             />
+
+            {/* Keep edit actions together, matching the Add form. */}
+            <Stack
+              horizontal
+              wrap
+              className={styles.manualFormActions}
+              tokens={{ childrenGap: 8 }}
+            >
+              <PrimaryButton
+                text="Update"
+                onClick={handleUpdateEdit}
+                disabled={busy}
+              />
+              <DefaultButton
+                text="Cancel edit"
+                onClick={handleCancelEdit}
+                disabled={busy}
+              />
+            </Stack>
           </section>
         ) : null}
 
@@ -386,6 +488,8 @@ const ManageFavouritesPanel: React.FC<IManageFavouritesPanelProps> = ({
             addForm={addForm}
             addFormError={addFormError}
             busy={busy}
+            selectedTab={addTab}
+            onTabChange={handleAddTabChange}
             onAddFormChange={setAddForm}
             onAddFromCatalog={handleAddFromCatalog}
             onAddFromForm={handleAddFromForm}

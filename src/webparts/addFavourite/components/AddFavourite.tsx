@@ -1,13 +1,12 @@
 import * as React from 'react';
-import { DirectionalHint, Icon, IconButton, MessageBar, MessageBarType, Spinner, SpinnerSize, TooltipHost } from '@fluentui/react';
+import { DirectionalHint,  IconButton, MessageBar, MessageBarType, Spinner, SpinnerSize, TooltipHost } from '@fluentui/react';
 import type { IFavouriteItem } from '../../myFavourites/models/IFavouriteItem';
 import { stripFavouritesForStorage } from '../../myFavourites/services/favouritesCatalogMerge';
 import {
   favouriteAlreadyAddedMessage,
-  findFavouriteWithTitle
+  findFavouriteDuplicate
 } from '../../myFavourites/services/favouriteDuplicateCheck';
 import { normalizeFavouriteItem } from '../../myFavourites/services/favouritesFileModel';
-import { INTERNAL_LINK_FIELD_NOTE } from '../../shared/internalLinkNote';
 import type { IAddFavouriteProps } from './IAddFavouriteProps';
 import styles from './AddFavourite.module.scss';
 
@@ -37,7 +36,7 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
       .loadFavourites()
       .then(({ items }) => {
         if (!cancelled) {
-          setAlreadyAdded(!!findFavouriteWithTitle(items, title));
+          setAlreadyAdded(!!findFavouriteDuplicate(items, title, url));
         }
       })
       .catch(() => {
@@ -49,7 +48,7 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
     return () => {
       cancelled = true;
     };
-  }, [isConfigured, storageService, title]);
+  }, [isConfigured, storageService, title, url]);
 
   const handleAdd = React.useCallback(async () => {
     if (!isConfigured || busy) {
@@ -71,14 +70,16 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
 
     try {
       const { items: existing } = await storageService.loadFavourites();
-      if (findFavouriteWithTitle(existing, title)) {
+      const duplicate: IFavouriteItem | undefined =
+        findFavouriteDuplicate(existing, title, url);
+
+      if (duplicate) {
         setAlreadyAdded(true);
         setNoticeType(MessageBarType.warning);
-        setNotice(favouriteAlreadyAddedMessage(title));
+        setNotice(favouriteAlreadyAddedMessage(duplicate.title));
         setBusy(false);
         return;
       }
-
       const favourite: IFavouriteItem = normalizeFavouriteItem({
         title,
         url,
@@ -127,15 +128,6 @@ const AddFavourite: React.FC<IAddFavouriteProps> = ({ storageService, link }) =>
         <div className={styles.cardMain}>
           <div className={styles.cardTitleRow}>
             <span className={titleClassName}>{cardHeading}</span>
-            {link.internal ? (
-              <TooltipHost
-                content={INTERNAL_LINK_FIELD_NOTE}
-                directionalHint={DirectionalHint.leftCenter}
-                calloutProps={{ gapSpace: 8 }}
-              >
-                <Icon iconName="CityNext" className={styles.cardInternalIcon} aria-label="Internal link" />
-              </TooltipHost>
-            ) : null}
           </div>
           {hasDescription ? <p className={styles.cardDescription}>{description}</p> : null}
         </div>

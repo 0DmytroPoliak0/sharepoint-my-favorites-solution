@@ -6,8 +6,8 @@ import { PULSE_FAVOURITES_CATALOG_LIST_TITLE } from './constants';
 import { PULSE_FAVOURITES_CATALOGUE_LABEL } from '../../shared/catalogueLabels';
 import { readRowValue, type ICatalogFieldMap } from './catalogFieldMap';
 import { CatalogFieldResolver } from './catalogFieldResolver';
-import { favouriteItemKey, normalizeFavouriteItem } from './favouritesFileModel';
-import { normalizeTitleForCompare } from './favouriteDuplicateCheck';
+import { normalizeFavouriteItem } from './favouritesFileModel';
+import { findFavouriteDuplicate } from './favouriteDuplicateCheck';
 import {
   normalizeSiteUrl,
   readBooleanField,
@@ -131,13 +131,15 @@ export class CatalogService {
     catalog: ICatalogItem[],
     favourites: IFavouriteItem[]
   ): ICatalogItem[] {
-    const existing = new Set(favourites.map((f) => favouriteItemKey(f)));
-    const existingTitles = new Set(favourites.map((f) => normalizeTitleForCompare(f.title)));
+    const existingCatalogIds = new Set(
+      favourites.map((item) => item.catalogItemId)
+    );
+
     return catalog.filter(
-      (c) =>
-        c.enabled &&
-        !existing.has(`catalog:${c.id}`) &&
-        !existingTitles.has(normalizeTitleForCompare(c.title))
+      (item) =>
+        item.enabled &&
+        !existingCatalogIds.has(item.id) &&
+        !findFavouriteDuplicate(favourites, item.title, item.url)
     );
   }
 }

@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { Stack, TextField, Toggle } from '@fluentui/react';
-import { INTERNAL_LINK_TOGGLE_LABEL } from '../../shared/internalLinkNote';
+import { Stack, TextField } from '@fluentui/react';
 import type { IFavouriteFormValues } from '../models/IFavouriteItem';
 
 export interface IFavouriteItemFormProps {
@@ -37,14 +36,6 @@ const FavouriteItemForm: React.FC<IFavouriteItemFormProps> = ({ values, onChange
         disabled={disabled}
         value={values.description}
         onChange={(_, v) => setField('description', v ?? '')}
-      />
-      <Toggle
-        label={INTERNAL_LINK_TOGGLE_LABEL}
-        disabled={disabled}
-        checked={values.internal}
-        onChange={(_, checked) => setField('internal', !!checked)}
-        onText="Yes"
-        offText="No"
       />
     </Stack>
   );

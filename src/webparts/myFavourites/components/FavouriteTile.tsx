@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { Icon, IconButton } from '@fluentui/react';
+import {
+  Callout,
+  DirectionalHint,
+  getId,
+  Icon,
+  IconButton
+} from '@fluentui/react';
 import type { IFavouriteItem } from '../models/IFavouriteItem';
 import styles from './MyFavourites.module.scss';
 
@@ -16,6 +22,18 @@ export interface IFavouriteTileProps {
   onDragEnd?: () => void;
   onDragOver?: (event: React.DragEvent<HTMLElement>) => void;
   onDrop?: (event: React.DragEvent<HTMLElement>) => void;
+  onGripPointerDown?: (
+    event: React.PointerEvent<HTMLSpanElement>
+  ) => void;
+  onGripPointerMove?: (
+    event: React.PointerEvent<HTMLSpanElement>
+  ) => void;
+  onGripPointerUp?: (
+    event: React.PointerEvent<HTMLSpanElement>
+  ) => void;
+  onGripPointerCancel?: (
+    event: React.PointerEvent<HTMLSpanElement>
+  ) => void;
 }
 
 const FavouriteTile: React.FC<IFavouriteTileProps> = ({
@@ -30,7 +48,11 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
   onDragStart,
   onDragEnd,
   onDragOver,
-  onDrop
+  onDrop,
+  onGripPointerDown,
+  onGripPointerMove,
+  onGripPointerUp,
+  onGripPointerCancel
 }) => {
   const description: string = item.description.trim();
   const isView: boolean = mode === 'view';
@@ -38,6 +60,12 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
   const showEdit: boolean = !isView && !isCatalogItem && !!onEdit;
   const showDescriptionInTile: boolean = !isView && description.length > 0;
   const showViewHelp: boolean = isView && description.length > 0;
+  // Anchor the popup to its own information button.
+  const helpButtonRef = React.useRef<HTMLButtonElement>(null);
+  const helpDismissTimer = React.useRef<number | undefined>(undefined);
+  const [helpId] = React.useState<string>(
+    () => getId('quick-link-help-')
+  );
   const [helpVisible, setHelpVisible] = React.useState<boolean>(false);
 
   const tileClassName: string = [
@@ -51,19 +79,55 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
     .filter(Boolean)
     .join(' ');
 
-  const clearHelp = React.useCallback(() => {
-    setHelpVisible(false);
+  const cancelHelpDismiss = React.useCallback((): void => {
+    if (helpDismissTimer.current !== undefined) {
+      window.clearTimeout(helpDismissTimer.current);
+      helpDismissTimer.current = undefined;
+    }
   }, []);
+
+  const clearHelp = React.useCallback((): void => {
+    cancelHelpDismiss();
+    setHelpVisible(false);
+  }, [cancelHelpDismiss]);
+
+  const showHelp = React.useCallback((): void => {
+    cancelHelpDismiss();
+    setHelpVisible(true);
+  }, [cancelHelpDismiss]);
+
+  const scheduleHelpDismiss = React.useCallback((): void => {
+    cancelHelpDismiss();
+
+    // Allow the pointer to cross the gap into the popup.
+    helpDismissTimer.current = window.setTimeout(clearHelp, 150);
+  }, [cancelHelpDismiss, clearHelp]);
+
+  const handleHelpPointerLeave = React.useCallback(
+    (event: React.PointerEvent<HTMLElement>): void => {
+      // Keep a tapped popup open until the user dismisses it.
+      if (event.pointerType !== 'touch') {
+        scheduleHelpDismiss();
+      }
+    },
+    [scheduleHelpDismiss]
+  );
+
+  React.useEffect(() => {
+    // Remove any pending timer when this tile disappears.
+    return () => cancelHelpDismiss();
+  }, [cancelHelpDismiss]);
 
   return (
     <article
       className={tileClassName}
+      data-favourite-id={item.id}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onMouseLeave={isView ? clearHelp : undefined}
+      onPointerLeave={isView ? handleHelpPointerLeave : undefined}
       aria-grabbed={draggable ? isDragging : undefined}
     >
       {!isView ? (
@@ -92,20 +156,20 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
               />
             ) : null}
           </div>
-          {item.internal ? (
-            <span className={styles.tileInternalInBar} title="Internal link" aria-label="Internal link">
-              <Icon iconName="CityNext" className={styles.tileInternalIcon} aria-hidden="true" />
-            </span>
-          ) : null}
         </div>
-      ) : item.internal ? (
-        <span className={styles.tileInternalBadge} title="Internal link" aria-label="Internal link">
-          <Icon iconName="CityNext" className={styles.tileInternalIcon} aria-hidden="true" />
-        </span>
       ) : null}
 
       {draggable ? (
-        <span className={styles.tileDragHandle} aria-hidden="true" title="Drag to reorder">
+        <span
+          className={styles.tileDragHandle}
+          aria-hidden="true"
+          title="Drag to reorder"
+          onPointerDown={onGripPointerDown}
+          onPointerMove={onGripPointerMove}
+          onPointerUp={onGripPointerUp}
+          onPointerCancel={onGripPointerCancel}
+          onLostPointerCapture={onGripPointerCancel}
+        >
           <Icon iconName="GripperDotsVertical" />
         </span>
       ) : null}
@@ -125,29 +189,52 @@ const FavouriteTile: React.FC<IFavouriteTileProps> = ({
       {showViewHelp ? (
         <>
           <button
+            ref={helpButtonRef}
             type="button"
             className={styles.tileHelp}
             aria-label={`Help for ${item.title}`}
             aria-expanded={helpVisible}
-            onMouseEnter={() => setHelpVisible(true)}
-            onFocus={() => setHelpVisible(true)}
+            aria-describedby={helpVisible ? helpId : undefined}
+            onPointerEnter={showHelp}
+            onFocus={showHelp}
             onClick={(ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              setHelpVisible(true);
+              showHelp();
             }}
-            onBlur={clearHelp}
           >
             ?
           </button>
+
           {helpVisible ? (
-            <div
-              className={styles.tileHelpPopover}
+            <Callout
+              target={helpButtonRef.current}
+              directionalHint={DirectionalHint.topAutoEdge}
+              directionalHintFixed={false}
+              minPagePadding={16}
+              gapSpace={6}
+              isBeakVisible={false}
+              calloutMaxWidth={320}
+              calloutMaxHeight={320}
               role="tooltip"
-              onMouseLeave={clearHelp}
+              id={helpId}
+              onDismiss={clearHelp}
+              onPointerEnter={showHelp}
+              onPointerLeave={handleHelpPointerLeave}
+              onRestoreFocus={() => undefined}
+              styles={{
+                root: {
+                  maxWidth: 'calc(100vw - 32px)'
+                },
+                calloutMain: {
+                  overflowY: 'auto'
+                }
+              }}
             >
-              {description}
-            </div>
+              <div className={styles.tileHelpPopover}>
+                {description}
+              </div>
+            </Callout>
           ) : null}
         </>
       ) : null}

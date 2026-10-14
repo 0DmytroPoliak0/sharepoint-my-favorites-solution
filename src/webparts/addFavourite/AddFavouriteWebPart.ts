@@ -3,8 +3,7 @@ import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
   type IPropertyPaneConfiguration,
-  PropertyPaneTextField,
-  PropertyPaneToggle
+  PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { IReadonlyTheme } from '@microsoft/sp-component-base';
@@ -93,12 +92,6 @@ export default class AddFavouriteWebPart extends BaseClientSideWebPart<IAddFavou
                   label: strings.DescriptionLabel,
                   multiline: true,
                   rows: 3
-                }),
-                PropertyPaneToggle('internal', {
-                  label: strings.InternalLabel,
-                  offText: strings.InternalOffText,
-                  onText: strings.InternalOnText,
-                  checked: this.properties.internal === true
                 }),
                 PropertyPaneTextField('helpInfo', {
                   label: strings.HelpInfoLabel,

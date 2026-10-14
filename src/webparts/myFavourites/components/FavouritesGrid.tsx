@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { IFavouriteItem } from '../models/IFavouriteItem';
 import { useGridLayout } from '../hooks/useGridLayout';
+import { useTouchReorder } from '../hooks/useTouchReorder';
 import FavouriteTile from './FavouriteTile';
 import FavouritesPager from './FavouritesPager';
 import styles from './MyFavourites.module.scss';
@@ -64,6 +65,22 @@ const FavouritesGrid: React.FC<IFavouritesGridProps> = ({
   const [draggingId, setDraggingId] = React.useState<string | undefined>(undefined);
   const [dropTargetId, setDropTargetId] = React.useState<string | undefined>(undefined);
 
+  // Touch uses the same draft reorder callback as desktop dragging.
+  const touchReorder = useTouchReorder(
+    gridRef,
+    mode === 'manage' && !!reorderable && !!onReorder,
+    onReorder
+  );
+
+  // Share the existing tile highlights between mouse and touch.
+  const activeDraggingId: string | undefined =
+    touchReorder.draggingId ?? draggingId;
+
+  const activeDropTargetId: string | undefined =
+    touchReorder.draggingId
+      ? touchReorder.dropTargetId
+      : dropTargetId;
+
   const usePagination: boolean = !reorderable;
   const visible: IFavouriteItem[] = usePagination ? paginate(items, pageSize, pageIndex) : items;
   const showPager: boolean = usePagination && pageCount > 1;
@@ -116,7 +133,7 @@ const FavouritesGrid: React.FC<IFavouritesGridProps> = ({
   return (
     <div className={styles.gridSection}>
       {reorderable ? (
-        <p className={styles.reorderHint}>Drag tiles to set your preferred order.</p>
+        <p className={styles.reorderHint}>Drag tiles to set your preferred order. On touch screens, use the grip.</p>
       ) : null}
       <div
         ref={gridRef}
@@ -134,12 +151,29 @@ const FavouritesGrid: React.FC<IFavouritesGridProps> = ({
             onEdit={onEdit}
             isSelected={selectedId === item.id}
             draggable={reorderable}
-            isDragging={draggingId === item.id}
-            isDropTarget={dropTargetId === item.id && draggingId !== item.id}
-            onDragStart={(ev) => handleDragStart(item.id, ev)}
+            isDragging={activeDraggingId === item.id}
+            isDropTarget={
+              activeDropTargetId === item.id &&
+              activeDraggingId !== item.id
+            }
+            onDragStart={(ev) => {
+              // A gesture must use either touch or native dragging.
+              if (touchReorder.isTouchDragInProgress()) {
+                ev.preventDefault();
+                return;
+              }
+
+              handleDragStart(item.id, ev);
+            }}
             onDragEnd={handleDragEnd}
             onDragOver={(ev) => handleDragOver(item.id, ev)}
             onDrop={(ev) => handleDrop(item.id, ev)}
+            onGripPointerDown={(ev) =>
+              touchReorder.handleStart(item.id, ev)
+            }
+            onGripPointerMove={touchReorder.handleMove}
+            onGripPointerUp={touchReorder.handleEnd}
+            onGripPointerCancel={touchReorder.handleCancel}
           />
         ))}
       </div>

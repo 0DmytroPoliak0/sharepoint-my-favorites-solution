@@ -25,6 +25,8 @@ export interface IAddFavouritesSectionProps {
   addForm: IFavouriteFormValues;
   addFormError: string | undefined;
   busy: boolean;
+  selectedTab: 'catalog' | 'manual';
+  onTabChange: (tab: 'catalog' | 'manual') => void;
   onAddFormChange: (values: IFavouriteFormValues) => void;
   onAddFromCatalog: (item: ICatalogItem) => void;
   onAddFromForm: () => void;
@@ -38,6 +40,8 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
   addForm,
   addFormError,
   busy,
+  selectedTab,
+  onTabChange,
   onAddFormChange,
   onAddFromCatalog,
   onAddFromForm,
@@ -48,7 +52,17 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
       <Text variant="mediumPlus" block className={styles.manageAddHeading}>
         Add a quick link to my homepage
       </Text>
-      <Pivot className={styles.addFavouritesPivot}>
+      <Pivot
+        className={styles.addFavouritesPivot}
+        selectedKey={selectedTab}
+        onLinkClick={(item) => {
+          const key = item?.props.itemKey;
+
+          if (key === 'catalog' || key === 'manual') {
+            onTabChange(key);
+          }
+        }}
+      >
         <PivotItem headerText="Add from catalogue" itemKey="catalog">
           <div className={styles.addTabPanel}>
             {addFormError ? <MessageBar messageBarType={MessageBarType.error}>{addFormError}</MessageBar> : null}
@@ -112,7 +126,7 @@ const AddFavouritesSection: React.FC<IAddFavouritesSectionProps> = ({
             <FavouriteItemForm values={addForm} onChange={onAddFormChange} disabled={busy} />
             <Stack horizontal className={styles.manualFormActions} tokens={{ childrenGap: 8 }}>
               <PrimaryButton text="Add" onClick={onAddFromForm} disabled={busy} />
-              <DefaultButton text="Clear" onClick={onClearForm} disabled={busy} />
+              <DefaultButton text="Cancel entry" onClick={onClearForm} disabled={busy} />
             </Stack>
           </div>
         </PivotItem>
