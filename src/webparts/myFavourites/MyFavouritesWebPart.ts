@@ -15,7 +15,7 @@ import { IMyFavouritesProps } from './components/IMyFavouritesProps';
 import { CatalogService } from './services/CatalogService';
 import { FavouritesStorageService } from './services/FavouritesStorageService';
 import { DEFAULT_MAX_ROWS, normalizeMaxRows } from './services/gridLayout';
-import { FAVOURITES_STORAGE_SITE_URL } from './services/constants';
+import { resolveFavouritesStorageSiteUrl } from './services/constants';
 import { resolveEntraUserId } from './services/sharePointUtils';
 import { propertyPaneWithoutVisibilityGroup } from '../shared/propertyPaneTypes';
 import { applyThemeVariables } from '../shared/applyThemeVariables';
@@ -54,13 +54,18 @@ export default class MyFavouritesWebPart extends BaseClientSideWebPart<IMyFavour
   }
 
   private _initServices(): void {
+    // Resolve the shared storage site even on pages in other Pulse sites.
+    const storageSiteUrl: string = resolveFavouritesStorageSiteUrl(
+      this.context.pageContext.site.absoluteUrl
+    );
+
     this._storageService = new FavouritesStorageService(
       this.context,
-      FAVOURITES_STORAGE_SITE_URL,
-      resolveEntraUserId(this.context),
-      this.context.pageContext.user.loginName
+      storageSiteUrl,
+      resolveEntraUserId(this.context)
     );
-    this._catalogService = new CatalogService(this.context, FAVOURITES_STORAGE_SITE_URL);
+
+    this._catalogService = new CatalogService(this.context, storageSiteUrl);
   }
 
   protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {

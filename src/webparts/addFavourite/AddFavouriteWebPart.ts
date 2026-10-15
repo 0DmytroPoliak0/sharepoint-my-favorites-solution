@@ -11,7 +11,9 @@ import { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'AddFavouriteWebPartStrings';
 import AddFavourite from './components/AddFavourite';
 import type { IAddFavouriteLinkConfig, IAddFavouriteProps } from './components/IAddFavouriteProps';
-import { FAVOURITES_STORAGE_SITE_URL } from '../myFavourites/services/constants';
+import {
+  resolveFavouritesStorageSiteUrl
+} from '../myFavourites/services/constants';
 import { FavouritesStorageService } from '../myFavourites/services/FavouritesStorageService';
 import { resolveEntraUserId } from '../myFavourites/services/sharePointUtils';
 import { propertyPaneWithoutVisibilityGroup } from '../shared/propertyPaneTypes';
@@ -48,11 +50,15 @@ export default class AddFavouriteWebPart extends BaseClientSideWebPart<IAddFavou
   }
 
   private _initServices(): void {
+    // Use the same storage site as the homepage web part.
+    const storageSiteUrl: string = resolveFavouritesStorageSiteUrl(
+      this.context.pageContext.site.absoluteUrl
+    );
+
     this._storageService = new FavouritesStorageService(
       this.context,
-      FAVOURITES_STORAGE_SITE_URL,
-      resolveEntraUserId(this.context),
-      this.context.pageContext.user.loginName
+      storageSiteUrl,
+      resolveEntraUserId(this.context)
     );
   }
 
