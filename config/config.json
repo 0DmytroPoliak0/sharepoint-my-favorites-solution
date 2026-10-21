@@ -1,0 +1,27 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "my-favourites-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/myFavourites/MyFavouritesWebPart.js",
+          "manifest": "./src/webparts/myFavourites/MyFavouritesWebPart.manifest.json"
+        }
+      ]
+    },
+    "add-favourite-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/addFavourite/AddFavouriteWebPart.js",
+          "manifest": "./src/webparts/addFavourite/AddFavouriteWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "MyFavouritesWebPartStrings": "lib/webparts/myFavourites/loc/{locale}.js",
+    "AddFavouriteWebPartStrings": "lib/webparts/addFavourite/loc/{locale}.js"
+  }
+}

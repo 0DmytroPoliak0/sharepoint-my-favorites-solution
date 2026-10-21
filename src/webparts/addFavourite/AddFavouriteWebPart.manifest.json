@@ -1,0 +1,25 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "b2e8c4a1-3f5d-4e7b-9c2a-1d8f6e3b4c5a",
+  "alias": "AddFavouriteWebPart",
+  "componentType": "WebPart",
+  "version": "*",
+  "manifestVersion": 2,
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
+  "supportsThemeVariants": true,
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+    "group": { "default": "Advanced" },
+    "title": { "default": "Pulse add homepage quick link" },
+    "description": { "default": "Add this page or a configured link to your homepage quick links." },
+    "officeFabricIconFontName": "AddFavorite",
+    "properties": {
+      "linkTitle": "",
+      "linkUrl": "",
+      "description": "",
+      "internal": false,
+      "helpInfo": ""
+    }
+  }]
+}
