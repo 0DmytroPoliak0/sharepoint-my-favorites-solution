@@ -1,15 +1,47 @@
 #Requires -Modules PnP.PowerShell
 
-$ErrorActionPreference = "Stop"
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)]
+    [ValidateSet('Test', 'Production')]
+    [string]$Environment,
 
-$siteUrl = "https://fhatesttenant.sharepoint.com/sites/pulse-FH"
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Tenant,
 
-$ClientID = "4662122e-5c0b-4505-ba36-48fdfb70f1b4"
-# PROD 8d03328a-0763-4912-a3c8-e0e110015be0
+    [Parameter(Mandatory)]
+    [guid]$ClientId
+)
 
-Connect-PnPOnline -Url $siteUrl -ClientId $ClientID -Tenant "fhatesttenant.onmicrosoft.com" -interactive
+$ErrorActionPreference = 'Stop'
 
-Import-Module PnP.PowerShell
+if ($ClientId -eq [guid]::Empty) {
+    throw 'A valid application client ID is required.'
+}
+
+# Keep the target sites aligned with the application configuration.
+$siteUrl = switch ($Environment) {
+    'Test' {
+        'https://fhatesttenant.sharepoint.com/sites/pulse-FH'
+    }
+    'Production' {
+        'https://healthbc.sharepoint.com/sites/pulse-FH'
+    }
+}
+
+Import-Module PnP.PowerShell -ErrorAction Stop
+
+Write-Host "Environment: $Environment" -ForegroundColor Cyan
+Write-Host "Target site: $siteUrl" -ForegroundColor Cyan
+
+Connect-PnPOnline `
+    -Url $siteUrl `
+    -Tenant $Tenant `
+    -ClientId ($ClientId.ToString()) `
+    -Interactive `
+    -ValidateConnection `
+    -ErrorAction Stop
 
 # Check storage names and paths before creating anything.
 $existingLists = @(Get-PnPList -Includes RootFolder -ErrorAction Stop)
@@ -21,54 +53,102 @@ $legacyLists = @($existingLists | Where-Object {
     )
 })
 if ($legacyLists.Count) {
-    throw 'Old favourites storage exists on this site. Rename it in place before running setup; this script will not create duplicate storage.'
+    throw 'Legacy favourites storage exists. Review it before continuing; this script does not migrate or convert existing storage.'
 }
 $storageTargets = @(
-    @{ Title = 'Pulse homepage quick links'; Path = 'PulseHomepageQuickLinks' },
-    @{ Title = 'Pulse homepage quick links catalogue'; Path = 'Lists/PulseHomepageQuickLinksCatalogue' }
+    @{
+        Title = 'Pulse homepage quick links'
+        Path = 'Lists/PulseHomepageQuickLinks'
+    },
+    @{
+        Title = 'Pulse homepage quick links catalogue'
+        Path = 'Lists/PulseHomepageQuickLinksCatalogue'
+    }
 )
+
+# Validate both destinations before creating or configuring anything.
 foreach ($storageTarget in $storageTargets) {
     $expectedUrl = "$webPath/$($storageTarget.Path)"
-    $namedList = @($existingLists | Where-Object { $_.Title -eq $storageTarget.Title })
-    if ($namedList.Count -and $namedList[0].RootFolder.ServerRelativeUrl -ne $expectedUrl) {
-        throw "The storage title '$($storageTarget.Title)' exists at an unexpected URL. Check it before running setup."
+
+    $atUrl = @($existingLists | Where-Object {
+        $_.RootFolder.ServerRelativeUrl -eq $expectedUrl
+    })
+
+    $namedLists = @($existingLists | Where-Object {
+        $_.Title -eq $storageTarget.Title
+    })
+
+    if ($atUrl.Count -gt 1) {
+        throw "Multiple resources were found at $expectedUrl."
     }
-    if (@($existingLists | Where-Object {
-        $_.RootFolder.ServerRelativeUrl -eq $expectedUrl -and $_.Title -ne $storageTarget.Title
-    }).Count) {
-        throw "The required storage URL is already used by another list: $expectedUrl"
+
+    if ($atUrl.Count -eq 1) {
+        # Template 100 is a custom list; a document library is not suitable.
+        if ([int]$atUrl[0].BaseTemplate -ne 100) {
+            throw "The resource at $expectedUrl is not a custom list."
+        }
+
+        # The catalogue is still located by display name in the application.
+        if ($storageTarget.Path -eq 'Lists/PulseHomepageQuickLinksCatalogue') {
+            if (
+                $atUrl[0].Title -ne $storageTarget.Title -or
+                $namedLists.Count -ne 1
+            ) {
+                throw 'The catalogue name or location is ambiguous. Review it before continuing.'
+            }
+        }
+    }
+    elseif ($namedLists.Count -gt 0) {
+        throw "The name '$($storageTarget.Title)' is already used at another URL. This script will not rename or convert existing storage."
     }
 }
 
 #------------------------------------------------------------
-# Create Document Library: Pulse homepage quick links
+# Create or reuse the personal JSON storage list
 #------------------------------------------------------------
-$libraryTitle = "Pulse homepage quick links"
+$personalTitle = 'Pulse homepage quick links'
+$personalPath = 'Lists/PulseHomepageQuickLinks'
+$personalUrl = "$webPath/$personalPath"
 
-$library = $existingLists | Where-Object { $_.Title -eq $libraryTitle }
-
-if (-not $library)
-{
-    Write-Host "Creating document library '$libraryTitle'..." -ForegroundColor Green
-
-    New-PnpList `
-        -Title $libraryTitle `
-        -Template DocumentLibrary `
-        -Url "PulseHomepageQuickLinks" `
-        -OnQuickLaunch:$false
-
-    $library = Get-PnPList -Identity $libraryTitle
-
-    # Exclude from search results (NoCrawl)
-    Set-PnPList -Identity $libraryTitle -NoCrawl
-
-    Write-Host "Library created." -ForegroundColor Green
-}
-else
-{
-    Write-Host "Library '$libraryTitle' already exists." -ForegroundColor Yellow
+# Resolve by URL so an old library cannot be selected by its display name.
+$personalList = $existingLists | Where-Object {
+    $_.RootFolder.ServerRelativeUrl -eq $personalUrl
 }
 
+if (-not $personalList) {
+    Write-Host "Creating personal quick links list..." -ForegroundColor Green
+
+    New-PnPList `
+        -Title $personalTitle `
+        -Template GenericList `
+        -Url $personalPath `
+        -OnQuickLaunch:$false | Out-Null
+
+    $personalList = Get-PnPList -Identity $personalUrl -ErrorAction Stop
+}
+else {
+    Write-Host "Using the existing personal quick links list." -ForegroundColor Yellow
+}
+
+# Apply the required storage settings without changing role assignments.
+Set-PnPList `
+    -Identity $personalList.Id `
+    -EnableAttachments $true `
+    -ReadSecurity AllUsersReadAccessOnItemsTheyCreate `
+    -WriteSecurity WriteOnlyMyItems `
+    -NoCrawl `
+    -ErrorAction Stop
+
+# Support the application's lookup by the user's GUID in Title.
+Set-PnPField `
+    -List $personalList.Id `
+    -Identity 'Title' `
+    -Values @{ Indexed = $true } `
+    -ErrorAction Stop
+
+Write-Host "Personal storage settings configured." -ForegroundColor Green
+
+Write-Warning 'Verify the custom no-delete permission assignments before deployment. This script does not change role assignments.'
 #------------------------------------------------------------
 # Create Custom List: Pulse homepage quick links catalogue
 #------------------------------------------------------------
